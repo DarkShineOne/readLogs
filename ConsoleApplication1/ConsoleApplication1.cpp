@@ -8,6 +8,7 @@
 #include <map>
 #include <unordered_map>
 #include <vector>
+#include <algorithm>
 
 
 struct TArgs {
@@ -16,8 +17,8 @@ struct TArgs {
     bool print = false;
     int stats = 10;
     int window = 0;
-    int from = -2147483648;
-    int to = 2147483647;
+    int from = INT32_MAX;
+    int to = INT32_MIN;
 };
 
 struct LogEntry {
@@ -192,13 +193,14 @@ void StatsFunction(TArgs* args, std::unordered_map<std::string, int>* request_co
 }
 
 std::string timestampToReadable(time_t timestamp) {
-    struct tm* timeinfo;
-    timeinfo = std::localtime(&timestamp);
+    struct tm* timeinfo = new tm;
+    localtime_s(timeinfo, &timestamp);
 
-    char buffer[80];
+    char buffer[128];
     std::strftime(buffer, sizeof(buffer), "%Y-%m-%d %H:%M:%S", timeinfo);
     return std::string(buffer);
 }
+
 
 void WindowFunction(std::vector<int>& timestamps, TArgs* args) {
 
@@ -206,12 +208,17 @@ void WindowFunction(std::vector<int>& timestamps, TArgs* args) {
     int start_time = 0;
     int end_time = 0;
 
-    int left = 0;
+    /* хз что там с данными */
+    std::sort(timestamps.begin(), timestamps.end());
 
-    for (int right = 0; right < timestamps.size(); ++right) {
-        while (timestamps[right] - timestamps[left] > args->window) {
-            ++left;
+    size_t right;
+
+    for (size_t left = 0; left != timestamps.size(); left++) {
+        right = left;
+        while (right < timestamps.size() && timestamps[right] - timestamps[left] < args->window) {
+            right++;
         }
+
         int count = right - left + 1;
         if (count > max_count) {
             max_count = count;

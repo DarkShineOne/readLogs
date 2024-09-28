@@ -201,29 +201,28 @@ std::string timestampToReadable(time_t timestamp) {
     return std::string(buffer);
 }
 
-
 void WindowFunction(std::vector<int>& timestamps, TArgs* args) {
 
-    int max_count = 0;
-    int start_time = 0;
-    int end_time = 0;
+    size_t max_count = 0;
+    size_t start_time = 0;
+    size_t end_time = 0;
 
-    /* хз что там с данными */
+    /* С…Р· С‡С‚Рѕ С‚Р°Рј СЃ РґР°РЅРЅС‹РјРё */
     std::sort(timestamps.begin(), timestamps.end());
 
     size_t right;
 
-    for (size_t left = 0; left != timestamps.size(); left++) {
+    for (size_t left = 0; left < timestamps.size(); left++) {
         right = left;
         while (right < timestamps.size() && timestamps[right] - timestamps[left] < args->window) {
             right++;
         }
 
-        int count = right - left + 1;
+        size_t count = right - left + 1;
         if (count > max_count) {
             max_count = count;
             start_time = timestamps[left];
-            end_time = timestamps[right];
+            end_time = timestamps[right-1];
         }
     }
 
@@ -232,7 +231,6 @@ void WindowFunction(std::vector<int>& timestamps, TArgs* args) {
     std::cout << "END of window: " << timestampToReadable(end_time) << std::endl;
 
 }
-
 
 void FileReadline(std::ifstream* fileread, std::ofstream* filewrite, TArgs* args) {
     std::string line;
